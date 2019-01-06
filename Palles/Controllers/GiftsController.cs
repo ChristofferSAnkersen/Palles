@@ -27,6 +27,21 @@ namespace API.Controllers
             return _context.Gifts;
         }
 
+        [HttpGet("Girl")]
+        public async Task<IActionResult> GirlIndex()
+        {
+            var data = await _context.Gifts.Where(c => c.GirlGift == true).ToListAsync();
+            return Ok(data);
+        }
+
+
+        [HttpGet("Boy")]
+        public async Task<IActionResult> BoyIndex()
+        {
+            var data = await _context.Gifts.Where(c => c.BoyGift == true).ToListAsync();
+            return Ok(data);
+        }
+
         // GET: api/Gifts/5
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGift([FromRoute] int id)
@@ -46,40 +61,40 @@ namespace API.Controllers
             return Ok(gift);
         }
 
-        // PUT: api/Gifts/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutGift([FromRoute] int id, [FromBody] Gift gift)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //// PUT: api/Gifts/5
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutGift([FromRoute] int id, [FromBody] Gift gift)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            if (id != gift.GiftNumber)
-            {
-                return BadRequest();
-            }
+        //    if (id != gift.GiftNumber)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            _context.Entry(gift).State = EntityState.Modified;
+        //    _context.Entry(gift).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!GiftExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!GiftExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
         // POST: api/Gifts
         [HttpPost]
@@ -90,32 +105,33 @@ namespace API.Controllers
                 return BadRequest(ModelState);
             }
 
+            gift.CreationDate = DateTime.Now;
             _context.Gifts.Add(gift);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetGift", new { id = gift.GiftNumber }, gift);
         }
 
-        // DELETE: api/Gifts/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGift([FromRoute] int id)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //// DELETE: api/Gifts/5
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteGift([FromRoute] int id)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            var gift = await _context.Gifts.FindAsync(id);
-            if (gift == null)
-            {
-                return NotFound();
-            }
+        //    var gift = await _context.Gifts.FindAsync(id);
+        //    if (gift == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            _context.Gifts.Remove(gift);
-            await _context.SaveChangesAsync();
+        //    _context.Gifts.Remove(gift);
+        //    await _context.SaveChangesAsync();
 
-            return Ok(gift);
-        }
+        //    return Ok(gift);
+        //}
 
         private bool GiftExists(int id)
         {

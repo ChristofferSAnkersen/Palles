@@ -6,27 +6,46 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Entities;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace Website.Controllers
 {
     public class GiftsController : Controller
     {
-        private readonly PalleContext _context;
+        private Uri BaseEndPoint { get; set; }
+        private readonly HttpClient _httpClient;
 
-        public GiftsController(PalleContext context)
+
+        public GiftsController()
         {
-            _context = context;
+            BaseEndPoint = new Uri("https://localhost:44308/api/gifts/");
+            _httpClient = new HttpClient();
         }
 
         // GET: Gifts
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Gifts.ToListAsync());
+            var response = await _httpClient.GetAsync(BaseEndPoint, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            return View(JsonConvert.DeserializeObject<List<Gift>>(data));
         }
 
         public async Task<IActionResult> GirlIndex()
         {
-            return View(await _context.Gifts.Where(c => c.GirlGift == true).ToListAsync());
+            var response = await _httpClient.GetAsync(BaseEndPoint.ToString() + "Girl", HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            return View(JsonConvert.DeserializeObject<List<Gift>>(data));
+        }
+
+        public async Task<IActionResult> BoyIndex()
+        {
+            var response = await _httpClient.GetAsync(BaseEndPoint.ToString() + "Boy", HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            return View(JsonConvert.DeserializeObject<List<Gift>>(data));
         }
 
         // GET: Gifts/Details/5
@@ -37,8 +56,11 @@ namespace Website.Controllers
                 return NotFound();
             }
 
-            var gift = await _context.Gifts
-                .FirstOrDefaultAsync(m => m.GiftNumber == id);
+            var response = await _httpClient.GetAsync(BaseEndPoint.ToString() + id, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var gift = JsonConvert.DeserializeObject<Gift>(data);
+
             if (gift == null)
             {
                 return NotFound();
@@ -62,97 +84,20 @@ namespace Website.Controllers
         {
             if (ModelState.IsValid)
             {
-                gift.CreationDate = DateTime.Now;
-                _context.Add(gift);
-                await _context.SaveChangesAsync();
+                var response = await _httpClient.PostAsJsonAsync(BaseEndPoint, gift);
+                response.EnsureSuccessStatusCode();
                 return RedirectToAction(nameof(Index));
             }
             return View(gift);
         }
 
-        // GET: Gifts/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        private async Task<bool> GiftExists(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var gift = await _context.Gifts.FindAsync(id);
-            if (gift == null)
-            {
-                return NotFound();
-            }
-            return View(gift);
-        }
-
-        // POST: Gifts/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("GiftNumber,Title,Description,CreationDate,BoyGift,GirlGift")] Gift gift)
-        {
-            if (id != gift.GiftNumber)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(gift);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!GiftExists(gift.GiftNumber))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(gift);
-        }
-
-        // GET: Gifts/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var gift = await _context.Gifts
-                .FirstOrDefaultAsync(m => m.GiftNumber == id);
-            if (gift == null)
-            {
-                return NotFound();
-            }
-
-            return View(gift);
-        }
-
-        // POST: Gifts/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var gift = await _context.Gifts.FindAsync(id);
-            _context.Gifts.Remove(gift);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool GiftExists(int id)
-        {
-            return _context.Gifts.Any(e => e.GiftNumber == id);
+            var response = await _httpClient.GetAsync(BaseEndPoint, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsStringAsync();
+            var context = JsonConvert.DeserializeObject<List<Gift>>(data);
+            return context.Any(e => e.GiftNumber == id);
         }
     }
 }
