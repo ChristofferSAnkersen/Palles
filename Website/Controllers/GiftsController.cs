@@ -24,6 +24,11 @@ namespace Website.Controllers
             return View(await _context.Gifts.ToListAsync());
         }
 
+        public async Task<IActionResult> GirlIndex()
+        {
+            return View(await _context.Gifts.Where(c => c.GirlGift == true).ToListAsync());
+        }
+
         // GET: Gifts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -57,6 +62,7 @@ namespace Website.Controllers
         {
             if (ModelState.IsValid)
             {
+                gift.CreationDate = DateTime.Now;
                 _context.Add(gift);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
